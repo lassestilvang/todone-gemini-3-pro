@@ -1,7 +1,9 @@
 import { create } from 'zustand';
-import type { Task } from '../types';
-import { db } from '../lib/db';
+
 import { v4 as uuidv4 } from 'uuid';
+import { db } from '../lib/db';
+import type { Task } from '../types';
+import { calculateNextDueDate } from '../lib/recurrence';
 
 interface TaskState {
     tasks: Task[];
@@ -49,18 +51,52 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     },
 
     toggleTask: async (id) => {
-        const task = get().tasks.find((t) => t.id === id);
+        const state = get();
+        const task = state.tasks.find((t) => t.id === id);
         if (!task) return;
 
-        const updatedTask = { ...task, isCompleted: !task.isCompleted };
+        const newIsCompleted = !task.isCompleted;
+        const now = new Date().toISOString();
+
+        // Optimistic update for the clicked task
+        let updatedTasks = state.tasks.map((t) =>
+            t.id === id
+                ? { ...t, isCompleted: newIsCompleted, completedAt: newIsCompleted ? now : undefined }
+                : t
+        );
 
         try {
-            await db.tasks.update(id, { isCompleted: updatedTask.isCompleted });
-            set((state) => ({
-                tasks: state.tasks.map((t) => (t.id === id ? updatedTask : t)),
-            }));
+            // Handle Recurrence
+            if (newIsCompleted && task.isRecurring && task.recurringPattern && task.dueDate) {
+                const nextDueDate = calculateNextDueDate(task.dueDate, task.recurringPattern);
+
+                const nextTask: Task = {
+                    ...task,
+                    id: uuidv4(),
+                    isCompleted: false,
+                    completedAt: undefined,
+                    dueDate: nextDueDate,
+                    createdAt: now,
+                    // Ensure we don't copy over subtasks' parentId if we were to duplicate subtasks (which we aren't yet)
+                    // But for the main task, we keep it clean.
+                };
+
+                updatedTasks = [...updatedTasks, nextTask];
+
+                // Persist next task
+                await db.tasks.add(nextTask);
+            }
+
+            set({ tasks: updatedTasks });
+
+            await db.tasks.update(id, {
+                isCompleted: newIsCompleted,
+                completedAt: newIsCompleted ? now : undefined,
+            });
         } catch (error) {
             set({ error: 'Failed to toggle task' });
+            // Revert UI if persistence fails
+            await get().fetchTasks();
         }
     },
 

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Plus, Tag } from 'lucide-react';
+import { Plus, Tag, Repeat } from 'lucide-react';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useLabelStore } from '../../store/useLabelStore';
 import { cn } from '../../lib/utils';
+import type { RecurrencePattern } from '../../lib/recurrence';
 
 export const AddTask = () => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [content, setContent] = useState('');
     const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
+    const [recurringPattern, setRecurringPattern] = useState<RecurrencePattern | null>(null);
     const { addTask } = useTaskStore();
     const { labels } = useLabelStore();
 
@@ -20,11 +22,14 @@ export const AddTask = () => {
             projectId: 'inbox', // Default to inbox for now
             priority: 4,
             labels: selectedLabels,
-            isRecurring: false,
+            isRecurring: !!recurringPattern,
+            recurringPattern: recurringPattern || undefined,
+            dueDate: recurringPattern ? new Date().toISOString().split('T')[0] : undefined, // Default to today if recurring
         });
 
         setContent('');
         setSelectedLabels([]);
+        setRecurringPattern(null);
         setIsExpanded(false);
     };
 
@@ -96,36 +101,62 @@ export const AddTask = () => {
                         </div>
                     </div>
 
-                    {selectedLabels.length > 0 && (
-                        <div className="flex items-center gap-1">
-                            {selectedLabels.map(id => {
-                                const label = labels.find(l => l.id === id);
-                                if (!label) return null;
-                                return (
-                                    <span key={id} className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
-                                        {label.name}
-                                    </span>
-                                );
-                            })}
+                    <div className="relative group">
+                        <button type="button" className={cn(
+                            "px-2 py-1 text-xs font-medium border rounded hover:bg-gray-50 flex items-center gap-1",
+                            recurringPattern ? "text-primary-600 border-primary-200 bg-primary-50" : "text-gray-500 border-gray-200"
+                        )}>
+                            <Repeat size={12} />
+                            <span>{recurringPattern || 'Repeat'}</span>
+                        </button>
+
+                        <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg py-1 hidden group-hover:block z-10">
+                            {['daily', 'weekdays', 'weekly', 'monthly'].map((pattern) => (
+                                <button
+                                    key={pattern}
+                                    type="button"
+                                    onClick={() => setRecurringPattern(recurringPattern === pattern ? null : pattern as RecurrencePattern)}
+                                    className={cn(
+                                        "w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50",
+                                        recurringPattern === pattern ? "text-primary-600 bg-primary-50" : "text-gray-700"
+                                    )}
+                                >
+                                    {pattern.charAt(0).toUpperCase() + pattern.slice(1)}
+                                </button>
+                            ))}
                         </div>
-                    )}
+                    </div>
                 </div>
-                <div className="flex gap-2">
-                    <button
-                        type="button"
-                        onClick={() => setIsExpanded(false)}
-                        className="px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={!content.trim()}
-                        className="px-3 py-1.5 text-xs font-semibold text-white bg-primary-500 rounded hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        Add task
-                    </button>
-                </div>
+
+                {selectedLabels.length > 0 && (
+                    <div className="flex items-center gap-1">
+                        {selectedLabels.map(id => {
+                            const label = labels.find(l => l.id === id);
+                            if (!label) return null;
+                            return (
+                                <span key={id} className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                                    {label.name}
+                                </span>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+            <div className="flex gap-2">
+                <button
+                    type="button"
+                    onClick={() => setIsExpanded(false)}
+                    className="px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="submit"
+                    disabled={!content.trim()}
+                    className="px-3 py-1.5 text-xs font-semibold text-white bg-primary-500 rounded hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Add task
+                </button>
             </div>
         </form>
     );
