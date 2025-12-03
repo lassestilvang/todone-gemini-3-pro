@@ -4,6 +4,7 @@ import { cn } from '../../lib/utils';
 import { useProjectStore } from '../../store/useProjectStore';
 import { LabelList } from './LabelList';
 import { FilterList } from './FilterList';
+import { KarmaStats } from '../gamification/KarmaStats';
 
 export const Sidebar = () => {
     const { projects } = useProjectStore();
@@ -15,6 +16,10 @@ export const Sidebar = () => {
                     <span className="bg-primary-500 text-white rounded-md p-1 text-sm">✓</span>
                     Todone
                 </h1>
+            </div>
+
+            <div className="mb-6">
+                <KarmaStats />
             </div>
 
             <nav className="space-y-1 mb-8">

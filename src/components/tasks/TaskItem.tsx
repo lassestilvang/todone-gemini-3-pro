@@ -10,9 +10,12 @@ interface TaskItemProps {
     task: Task;
 }
 
+import { useKarmaStore } from '../../store/useKarmaStore';
+
 export const TaskItem = ({ task }: TaskItemProps) => {
     const { toggleTask, tasks, addTask } = useTaskStore();
     const { labels } = useLabelStore();
+    const { addPoints } = useKarmaStore();
     const [isExpanded, setIsExpanded] = useState(false);
     const [isAddingSubtask, setIsAddingSubtask] = useState(false);
     const [subtaskContent, setSubtaskContent] = useState('');
@@ -20,6 +23,14 @@ export const TaskItem = ({ task }: TaskItemProps) => {
     const taskLabels = labels.filter(l => task.labels.includes(l.id));
     const subtasks = tasks.filter(t => t.parentId === task.id);
     const completedSubtasks = subtasks.filter(t => t.isCompleted).length;
+
+    const handleToggle = async () => {
+        await toggleTask(task.id);
+        if (!task.isCompleted) {
+            addPoints(100); // Award 100 points for completing a task
+            // Play sound?
+        }
+    };
 
     const handleAddSubtask = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,7 +53,7 @@ export const TaskItem = ({ task }: TaskItemProps) => {
         <div className="group/item">
             <div className="flex items-start gap-3 py-2 border-b border-gray-100 hover:bg-gray-50 -mx-4 px-4 transition-colors">
                 <button
-                    onClick={() => toggleTask(task.id)}
+                    onClick={handleToggle}
                     className={cn(
                         "mt-1 w-5 h-5 rounded-full border flex items-center justify-center transition-colors",
                         task.isCompleted
