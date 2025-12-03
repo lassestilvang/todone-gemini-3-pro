@@ -1,6 +1,7 @@
-import { Check, Calendar } from 'lucide-react';
+import { Check, Calendar, Tag } from 'lucide-react';
 import type { Task } from '../../types';
 import { useTaskStore } from '../../store/useTaskStore';
+import { useLabelStore } from '../../store/useLabelStore';
 import { cn } from '../../lib/utils';
 import { format } from 'date-fns';
 
@@ -10,6 +11,9 @@ interface TaskItemProps {
 
 export const TaskItem = ({ task }: TaskItemProps) => {
     const { toggleTask } = useTaskStore();
+    const { labels } = useLabelStore();
+
+    const taskLabels = labels.filter(l => task.labels.includes(l.id));
 
     return (
         <div className="group flex items-start gap-3 py-3 border-b border-gray-100 hover:bg-gray-50 -mx-4 px-4 transition-colors">
@@ -42,6 +46,12 @@ export const TaskItem = ({ task }: TaskItemProps) => {
                         {task.description && (
                             <span className="truncate max-w-[200px]">{task.description}</span>
                         )}
+                        {taskLabels.map(label => (
+                            <div key={label.id} className="flex items-center gap-1">
+                                <Tag size={10} color={label.color} className="fill-current opacity-50" />
+                                <span className="text-xs" style={{ color: label.color }}>{label.name}</span>
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>

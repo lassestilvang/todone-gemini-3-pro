@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Tag } from 'lucide-react';
 import { useTaskStore } from '../../store/useTaskStore';
+import { useLabelStore } from '../../store/useLabelStore';
+import { cn } from '../../lib/utils';
 
 export const AddTask = () => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [content, setContent] = useState('');
+    const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
     const { addTask } = useTaskStore();
+    const { labels } = useLabelStore();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -15,11 +19,12 @@ export const AddTask = () => {
             content,
             projectId: 'inbox', // Default to inbox for now
             priority: 4,
-            labels: [],
+            labels: selectedLabels,
             isRecurring: false,
         });
 
         setContent('');
+        setSelectedLabels([]);
         setIsExpanded(false);
     };
 
@@ -56,6 +61,54 @@ export const AddTask = () => {
                     <button type="button" className="px-2 py-1 text-xs font-medium text-gray-500 border border-gray-200 rounded hover:bg-gray-50">
                         Inbox
                     </button>
+
+                    <div className="relative group">
+                        <button type="button" className="px-2 py-1 text-xs font-medium text-gray-500 border border-gray-200 rounded hover:bg-gray-50 flex items-center gap-1">
+                            <Tag size={12} />
+                            <span>Labels</span>
+                        </button>
+
+                        <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 hidden group-hover:block z-10">
+                            {labels.length === 0 ? (
+                                <div className="px-3 py-2 text-xs text-gray-400">No labels created</div>
+                            ) : (
+                                labels.map(label => (
+                                    <button
+                                        key={label.id}
+                                        type="button"
+                                        onClick={() => {
+                                            setSelectedLabels(prev =>
+                                                prev.includes(label.id)
+                                                    ? prev.filter(id => id !== label.id)
+                                                    : [...prev, label.id]
+                                            );
+                                        }}
+                                        className={cn(
+                                            "w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 flex items-center gap-2",
+                                            selectedLabels.includes(label.id) ? "text-primary-600 bg-primary-50" : "text-gray-700"
+                                        )}
+                                    >
+                                        <Tag size={12} color={label.color} className="fill-current opacity-50" />
+                                        <span>{label.name}</span>
+                                    </button>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {selectedLabels.length > 0 && (
+                        <div className="flex items-center gap-1">
+                            {selectedLabels.map(id => {
+                                const label = labels.find(l => l.id === id);
+                                if (!label) return null;
+                                return (
+                                    <span key={id} className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                                        {label.name}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
                 <div className="flex gap-2">
                     <button

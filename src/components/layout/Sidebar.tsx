@@ -2,6 +2,8 @@ import React from 'react';
 import { Inbox, Calendar, CalendarDays, Hash, Plus } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useProjectStore } from '../../store/useProjectStore';
+import { LabelList } from './LabelList';
+import { FilterList } from './FilterList';
 
 export const Sidebar = () => {
     const { projects } = useProjectStore();
@@ -36,6 +38,9 @@ export const Sidebar = () => {
                         label={project.name}
                     />
                 ))}
+
+                <LabelList />
+                <FilterList />
             </div>
 
             <div className="pt-4 border-t border-gray-200 mt-auto">
