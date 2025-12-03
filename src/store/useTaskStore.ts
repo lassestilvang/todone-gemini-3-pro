@@ -11,6 +11,7 @@ interface TaskState {
     addTask: (task: Omit<Task, 'id' | 'createdAt' | 'isCompleted' | 'order'>) => Promise<void>;
     toggleTask: (id: string) => Promise<void>;
     deleteTask: (id: string) => Promise<void>;
+    reorderTasks: (activeId: string, overId: string) => Promise<void>;
     updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
 }
 
@@ -65,12 +66,44 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
     deleteTask: async (id) => {
         try {
-            await db.tasks.delete(id);
+            // Optimistically update UI
             set((state) => ({
                 tasks: state.tasks.filter((t) => t.id !== id),
             }));
+            await db.tasks.delete(id);
         } catch (error) {
             set({ error: 'Failed to delete task' });
+            // Revert UI if deletion fails (optional, but good practice)
+            // await get().fetchTasks();
+        }
+    },
+
+    reorderTasks: async (activeId, overId) => {
+        const state = get();
+        const oldIndex = state.tasks.findIndex((t) => t.id === activeId);
+        const newIndex = state.tasks.findIndex((t) => t.id === overId);
+
+        if (oldIndex === -1 || newIndex === -1) return;
+
+        const newTasks = [...state.tasks];
+        const [movedTask] = newTasks.splice(oldIndex, 1);
+        newTasks.splice(newIndex, 0, movedTask);
+
+        // Update order field for all affected tasks (naive implementation)
+        // In a real app, we'd use a more efficient ranking system (e.g., Lexorank)
+        const updates = newTasks.map((t, index) => ({ ...t, order: index }));
+
+        set({ tasks: updates });
+
+        // Persist changes
+        try {
+            await db.transaction('rw', db.tasks, async () => {
+                await Promise.all(updates.map(t => db.tasks.update(t.id, { order: t.order })));
+            });
+        } catch (error) {
+            set({ error: 'Failed to reorder tasks' });
+            // Revert UI if persistence fails
+            await get().fetchTasks();
         }
     },
 
