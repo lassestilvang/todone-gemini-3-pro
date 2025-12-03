@@ -5,6 +5,7 @@ import { useProjectStore } from './store/useProjectStore';
 import { useTaskStore } from './store/useTaskStore';
 import { useLabelStore } from './store/useLabelStore';
 import { useFilterStore } from './store/useFilterStore';
+import { useSettingsStore } from './store/useSettingsStore';
 import { TaskList } from './components/tasks/TaskList';
 import { CommandPalette } from './components/search/CommandPalette';
 import { filterTasks } from './lib/filter';
@@ -16,6 +17,20 @@ import { CalendarView } from './components/tasks/CalendarView';
 import { LayoutGrid, List, Calendar as CalendarIcon } from 'lucide-react';
 
 function App() {
+  const { theme } = useSettingsStore();
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+
+    if (theme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.classList.add(systemTheme);
+    } else {
+      root.classList.add(theme);
+    }
+  }, [theme]);
+
   useSeedData();
   const { projects, fetchProjects } = useProjectStore();
   const { tasks, fetchTasks } = useTaskStore();
@@ -79,12 +94,20 @@ function App() {
           >
             <CalendarIcon size={18} />
           </button>
+          <button
+            onClick={() => setViewType('settings')}
+            className={`p-2 rounded-md transition-colors ${viewType === 'settings' ? 'bg-white shadow-sm text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
+            title="Settings"
+          >
+            <Settings size={18} />
+          </button>
         </div>
       </div>
 
       {viewType === 'list' && <TaskList />}
       {viewType === 'board' && <BoardView tasks={filteredTasks} />}
       {viewType === 'calendar' && <CalendarView tasks={filteredTasks} />}
+      {viewType === 'settings' && <SettingsPage />}
 
       <CommandPalette
         isOpen={isCommandPaletteOpen}
