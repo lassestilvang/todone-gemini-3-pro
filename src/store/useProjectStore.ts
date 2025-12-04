@@ -21,7 +21,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
         try {
             const projects = await db.projects.orderBy('order').toArray();
             set({ projects, isLoading: false });
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to fetch projects', isLoading: false });
         }
     },
@@ -36,7 +36,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
         try {
             await db.projects.add(newProject);
             set((state) => ({ projects: [...state.projects, newProject] }));
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to add project' });
         }
     },

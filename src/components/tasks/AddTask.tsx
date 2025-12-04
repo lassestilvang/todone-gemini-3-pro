@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Tag, Repeat, Calendar } from 'lucide-react';
 import { useTaskStore } from '../../store/useTaskStore';
+import { useUIStore } from '../../store/useUIStore';
 import { useLabelStore } from '../../store/useLabelStore';
 import { cn } from '../../lib/utils';
 import type { RecurrencePattern } from '../../lib/recurrence';
@@ -15,6 +16,8 @@ export const AddTask = () => {
     const [parsedDate, setParsedDate] = useState<ParsedDate | null>(null);
     const { addTask } = useTaskStore();
     const { labels } = useLabelStore();
+
+    const { activeContext } = useUIStore();
 
     const handleContentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newContent = e.target.value;
@@ -31,14 +34,29 @@ export const AddTask = () => {
         let finalContent = content;
         let finalDueDate = recurringPattern ? new Date().toISOString().split('T')[0] : undefined;
 
+        // Set default due date based on context
+        if (activeContext.type === 'today' && !finalDueDate) {
+            finalDueDate = new Date().toISOString().split('T')[0];
+        } else if (activeContext.type === 'upcoming' && !finalDueDate) {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            finalDueDate = tomorrow.toISOString().split('T')[0];
+        }
+
         if (parsedDate && !recurringPattern) {
             finalContent = removeDateFromText(content, parsedDate.text);
             finalDueDate = parsedDate.date.toISOString().split('T')[0];
         }
 
+        // Determine project ID
+        let projectId = 'inbox';
+        if (activeContext.type === 'project' && activeContext.id) {
+            projectId = activeContext.id;
+        }
+
         await addTask({
             content: finalContent,
-            projectId: 'inbox', // Default to inbox for now
+            projectId,
             priority: 4,
             labels: selectedLabels,
             isRecurring: !!recurringPattern,

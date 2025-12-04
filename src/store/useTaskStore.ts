@@ -27,7 +27,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         try {
             const tasks = await db.tasks.toArray();
             set({ tasks, isLoading: false });
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to fetch tasks', isLoading: false });
         }
     },
@@ -45,7 +45,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         try {
             await db.tasks.add(newTask);
             set((state) => ({ tasks: [...state.tasks, newTask] }));
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to add task' });
         }
     },
@@ -93,7 +93,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
                 isCompleted: newIsCompleted,
                 completedAt: newIsCompleted ? now : undefined,
             });
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to toggle task' });
             // Revert UI if persistence fails
             await get().fetchTasks();
@@ -107,7 +107,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
                 tasks: state.tasks.filter((t) => t.id !== id),
             }));
             await db.tasks.delete(id);
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to delete task' });
             // Revert UI if deletion fails (optional, but good practice)
             // await get().fetchTasks();
@@ -136,7 +136,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
             await db.transaction('rw', db.tasks, async () => {
                 await Promise.all(updates.map(t => db.tasks.update(t.id, { order: t.order })));
             });
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to reorder tasks' });
             // Revert UI if persistence fails
             await get().fetchTasks();
@@ -149,7 +149,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
             set((state) => ({
                 tasks: state.tasks.map((t) => (t.id === id ? { ...t, ...updates } : t)),
             }));
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to update task' });
         }
     },

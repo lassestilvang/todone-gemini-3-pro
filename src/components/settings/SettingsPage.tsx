@@ -1,37 +1,62 @@
-import React from 'react';
 import { Moon, Sun, Monitor, Check } from 'lucide-react';
 import { useSettingsStore, type Theme } from '../../store/useSettingsStore';
 import { cn } from '../../lib/utils';
 
+interface ThemeOptionProps {
+    value: Theme;
+    icon: React.ElementType;
+    label: string;
+    currentTheme: Theme;
+    onSelect: (theme: Theme) => void;
+}
+
+const ThemeOption = ({ value, icon: Icon, label, currentTheme, onSelect }: ThemeOptionProps) => (
+    <button
+        onClick={() => onSelect(value)}
+        className={cn(
+            "relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all w-32",
+            currentTheme === value
+                ? "border-primary-500 bg-primary-50 text-primary-700"
+                : "border-gray-200 hover:border-gray-300 text-gray-600"
+        )}
+    >
+        <Icon size={24} />
+        <span className="text-sm font-medium">{label}</span>
+        {currentTheme === value && <div className="absolute top-2 right-2 text-primary-500"><Check size={16} /></div>}
+    </button>
+);
+
 export const SettingsPage = () => {
     const { theme, setTheme, startOfWeek, setStartOfWeek, timeFormat, setTimeFormat } = useSettingsStore();
-
-    const ThemeOption = ({ value, icon: Icon, label }: { value: Theme; icon: any; label: string }) => (
-        <button
-            onClick={() => setTheme(value)}
-            className={cn(
-                "flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all w-32",
-                theme === value
-                    ? "border-primary-500 bg-primary-50 text-primary-700"
-                    : "border-gray-200 hover:border-gray-300 text-gray-600"
-            )}
-        >
-            <Icon size={24} />
-            <span className="text-sm font-medium">{label}</span>
-            {theme === value && <div className="absolute top-2 right-2 text-primary-500"><Check size={16} /></div>}
-        </button>
-    );
 
     return (
         <div className="max-w-2xl mx-auto py-8">
             <h1 className="text-2xl font-bold text-gray-900 mb-8">Settings</h1>
 
-            <section className="mb-10">
+            <section className="mb-12">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Appearance</h2>
                 <div className="flex gap-4">
-                    <ThemeOption value="light" icon={Sun} label="Light" />
-                    <ThemeOption value="dark" icon={Moon} label="Dark" />
-                    <ThemeOption value="system" icon={Monitor} label="System" />
+                    <ThemeOption
+                        value="light"
+                        icon={Sun}
+                        label="Light"
+                        currentTheme={theme}
+                        onSelect={setTheme}
+                    />
+                    <ThemeOption
+                        value="dark"
+                        icon={Moon}
+                        label="Dark"
+                        currentTheme={theme}
+                        onSelect={setTheme}
+                    />
+                    <ThemeOption
+                        value="system"
+                        icon={Monitor}
+                        label="System"
+                        currentTheme={theme}
+                        onSelect={setTheme}
+                    />
                 </div>
             </section>
 

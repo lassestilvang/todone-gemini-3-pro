@@ -22,7 +22,7 @@ export const useLabelStore = create<LabelState>((set) => ({
         try {
             const labels = await db.labels.toArray();
             set({ labels, isLoading: false });
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to fetch labels', isLoading: false });
         }
     },
@@ -38,7 +38,7 @@ export const useLabelStore = create<LabelState>((set) => ({
         try {
             await db.labels.add(newLabel);
             set((state) => ({ labels: [...state.labels, newLabel] }));
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to add label' });
         }
     },
@@ -49,7 +49,7 @@ export const useLabelStore = create<LabelState>((set) => ({
             set((state) => ({
                 labels: state.labels.filter((l) => l.id !== id),
             }));
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to delete label' });
         }
     },

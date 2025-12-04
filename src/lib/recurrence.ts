@@ -6,22 +6,28 @@ export const calculateNextDueDate = (currentDate: string, pattern: string): stri
     const date = parseISO(currentDate);
 
     switch (pattern) {
-        case 'daily':
+        case 'daily': {
             return format(addDays(date, 1), 'yyyy-MM-dd');
-        case 'weekdays':
+        }
+        case 'weekdays': {
             const nextDay = addDays(date, 1);
             const day = nextDay.getDay();
             if (day === 0) return format(addDays(nextDay, 1), 'yyyy-MM-dd'); // Sunday -> Monday
             if (day === 6) return format(addDays(nextDay, 2), 'yyyy-MM-dd'); // Saturday -> Monday
             return format(nextDay, 'yyyy-MM-dd');
-        case 'weekly':
+        }
+        case 'weekly': {
             return format(addWeeks(date, 1), 'yyyy-MM-dd');
-        case 'monthly':
+        }
+        case 'monthly': {
             return format(addMonths(date, 1), 'yyyy-MM-dd');
-        case 'yearly':
+        }
+        case 'yearly': {
             return format(addYears(date, 1), 'yyyy-MM-dd');
-        default:
+        }
+        default: {
             return currentDate;
+        }
     }
 };
 

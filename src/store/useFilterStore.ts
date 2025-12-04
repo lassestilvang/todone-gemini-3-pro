@@ -22,7 +22,7 @@ export const useFilterStore = create<FilterState>((set) => ({
         try {
             const filters = await db.filters.toArray();
             set({ filters, isLoading: false });
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to fetch filters', isLoading: false });
         }
     },
@@ -39,7 +39,7 @@ export const useFilterStore = create<FilterState>((set) => ({
         try {
             await db.filters.add(newFilter);
             set((state) => ({ filters: [...state.filters, newFilter] }));
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to add filter' });
         }
     },
@@ -50,7 +50,7 @@ export const useFilterStore = create<FilterState>((set) => ({
             set((state) => ({
                 filters: state.filters.filter((f) => f.id !== id),
             }));
-        } catch (error) {
+        } catch {
             set({ error: 'Failed to delete filter' });
         }
     },

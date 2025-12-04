@@ -47,7 +47,7 @@ export const useKarmaStore = create<KarmaState>()(
                     // Update history
                     const today = new Date().toISOString().split('T')[0];
                     const historyIndex = state.history.findIndex(h => h.date === today);
-                    let newHistory = [...state.history];
+                    const newHistory = { ...state.history };
 
                     if (historyIndex >= 0) {
                         newHistory[historyIndex].points += amount;

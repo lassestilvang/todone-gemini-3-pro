@@ -11,9 +11,19 @@ export class TodoneDB extends Dexie {
     constructor() {
         super('TodoneDB');
 
+        // Version 1: Initial schema
         this.version(1).stores({
             tasks: 'id, projectId, sectionId, priority, isCompleted, dueDate, [projectId+isCompleted]',
             projects: 'id, isFavorite, parentId',
+            sections: 'id, projectId',
+            labels: 'id, isFavorite',
+            filters: 'id, isFavorite'
+        });
+
+        // Version 2: Added 'order' index to projects
+        this.version(2).stores({
+            tasks: 'id, projectId, sectionId, priority, isCompleted, dueDate, [projectId+isCompleted]',
+            projects: 'id, isFavorite, parentId, order',
             sections: 'id, projectId',
             labels: 'id, isFavorite',
             filters: 'id, isFavorite'
