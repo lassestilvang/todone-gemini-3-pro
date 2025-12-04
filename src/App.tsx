@@ -19,11 +19,12 @@ import { SettingsPage } from './components/settings/SettingsPage';
 import { AddProjectModal } from './components/projects/AddProjectModal';
 import { AddLabelModal } from './components/labels/AddLabelModal';
 import { AddFilterModal } from './components/search/AddFilterModal';
+import { TaskEditModal } from './components/tasks/TaskEditModal';
 import { LayoutGrid, List, Calendar as CalendarIcon, Settings } from 'lucide-react';
 
 function App() {
   const { theme } = useSettingsStore();
-  const { viewType, setViewType, activeContext } = useUIStore();
+  const { viewType, setViewType, activeContext, activeModal, closeModal } = useUIStore();
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -219,8 +220,16 @@ function App() {
       <AddProjectModal />
       <AddLabelModal />
       <AddFilterModal />
+
+      {/* Global Task Add Modal */}
+      <TaskEditModal
+        isOpen={activeModal === 'task'}
+        onClose={closeModal}
+        mode="add"
+      />
     </Layout>
   );
 }
 
 export default App;
+

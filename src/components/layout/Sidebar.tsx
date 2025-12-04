@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckSquare, Calendar, CalendarDays, Inbox, Hash, Plus, WifiOff } from 'lucide-react';
+import { CheckSquare, Calendar, CalendarDays, Inbox, Hash, Plus, WifiOff, Pencil } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
 import { useUIStore } from '../../store/useUIStore';
 
@@ -11,9 +11,15 @@ import { KarmaStats } from '../gamification/KarmaStats';
 
 export const Sidebar = () => {
     const { projects } = useProjectStore();
-    const { openModal, activeContext, setActiveContext } = useUIStore();
+    const { openModal, activeContext, setActiveContext, setEditingItemId } = useUIStore();
 
     const isOnline = useOnlineStatus();
+
+    const handleEditProject = (e: React.MouseEvent, projectId: string) => {
+        e.stopPropagation();
+        setEditingItemId(projectId);
+        openModal('edit-project');
+    };
 
     return (
         <div className="w-64 bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 h-screen flex flex-col">
@@ -67,16 +73,34 @@ export const Sidebar = () => {
                 </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-1">
+            <div className="flex-1 overflow-y-auto space-y-1 px-2">
                 {projects.map((project) => (
-                    <SidebarItem
+                    <div
                         key={project.id}
-                        icon={<Hash size={18} />}
-                        label={project.name}
-                        color={project.color}
-                        active={activeContext.type === 'project' && activeContext.id === project.id}
                         onClick={() => setActiveContext({ type: 'project', id: project.id })}
-                    />
+                        className={cn(
+                            "flex items-center justify-between px-2 py-1.5 rounded-md group cursor-pointer transition-colors",
+                            activeContext.type === 'project' && activeContext.id === project.id
+                                ? "bg-white dark:bg-gray-800 shadow-sm"
+                                : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                        )}
+                    >
+                        <div className="flex items-center gap-3">
+                            <Hash size={18} style={{ color: project.color }} />
+                            <span className={cn(
+                                "text-sm",
+                                activeContext.type === 'project' && activeContext.id === project.id
+                                    ? "text-primary-600 dark:text-primary-400 font-medium"
+                                    : "text-gray-700 dark:text-gray-300"
+                            )}>{project.name}</span>
+                        </div>
+                        <button
+                            onClick={(e) => handleEditProject(e, project.id)}
+                            className="text-gray-400 hover:text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                            <Pencil size={14} />
+                        </button>
+                    </div>
                 ))}
             </div>
 
@@ -149,3 +173,4 @@ const SidebarItem = ({ icon, label, count, active, color, onClick }: SidebarItem
         </button>
     );
 };
+

@@ -1,35 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { useProjectStore } from '../../store/useProjectStore';
 import { useUIStore } from '../../store/useUIStore';
 
-export const AddProjectModal = () => {
-    const { activeModal, closeModal } = useUIStore();
-    const { addProject } = useProjectStore();
+export const ProjectModal = () => {
+    const { activeModal, closeModal, editingItemId } = useUIStore();
+    const { addProject, updateProject, projects } = useProjectStore();
     const [name, setName] = useState('');
     const [color, setColor] = useState('#808080');
 
-    const isOpen = activeModal === 'project';
+    const isOpen = activeModal === 'project' || activeModal === 'edit-project';
+    const isEditMode = activeModal === 'edit-project';
+    const editingProject = isEditMode ? projects.find(p => p.id === editingItemId) : null;
+
+    useEffect(() => {
+        if (isOpen && isEditMode && editingProject) {
+            setName(editingProject.name);
+            setColor(editingProject.color);
+        } else if (isOpen && !isEditMode) {
+            setName('');
+            setColor('#808080');
+        }
+    }, [isOpen, isEditMode, editingProject]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim()) return;
 
-        await addProject({
-            name,
-            color,
-            isFavorite: false,
-            viewType: 'list',
-            isShared: false,
-        });
+        if (isEditMode && editingItemId) {
+            await updateProject(editingItemId, { name, color });
+        } else {
+            await addProject({
+                name,
+                color,
+                isFavorite: false,
+                viewType: 'list',
+                isShared: false,
+            });
+        }
 
         setName('');
         setColor('#808080');
         closeModal();
     };
 
+    const title = isEditMode ? 'Edit Project' : 'Add Project';
+    const submitText = isEditMode ? 'Save Changes' : 'Add Project';
+
     return (
-        <Modal isOpen={isOpen} onClose={closeModal} title="Add Project">
+        <Modal isOpen={isOpen} onClose={closeModal} title={title}>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label htmlFor="project-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -75,10 +94,13 @@ export const AddProjectModal = () => {
                         disabled={!name.trim()}
                         className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Add Project
+                        {submitText}
                     </button>
                 </div>
             </form>
         </Modal>
     );
 };
+
+// Keep the old export for backwards compatibility
+export const AddProjectModal = ProjectModal;

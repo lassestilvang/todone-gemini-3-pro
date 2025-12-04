@@ -9,6 +9,7 @@ interface LabelState {
     error: string | null;
     fetchLabels: () => Promise<void>;
     addLabel: (name: string, color: string) => Promise<void>;
+    updateLabel: (id: string, updates: Partial<Label>) => Promise<void>;
     deleteLabel: (id: string) => Promise<void>;
 }
 
@@ -43,6 +44,17 @@ export const useLabelStore = create<LabelState>((set) => ({
         }
     },
 
+    updateLabel: async (id, updates) => {
+        try {
+            await db.labels.update(id, updates);
+            set((state) => ({
+                labels: state.labels.map((l) => (l.id === id ? { ...l, ...updates } : l)),
+            }));
+        } catch {
+            set({ error: 'Failed to update label' });
+        }
+    },
+
     deleteLabel: async (id) => {
         try {
             await db.labels.delete(id);
@@ -54,3 +66,4 @@ export const useLabelStore = create<LabelState>((set) => ({
         }
     },
 }));
+

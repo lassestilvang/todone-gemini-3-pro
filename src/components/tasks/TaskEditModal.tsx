@@ -1,56 +1,129 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
-import { X, Calendar, Tag, Hash, Flag, Clock, Check } from 'lucide-react';
+import { X, Calendar, Tag, Hash, Flag, Check, Repeat } from 'lucide-react';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useProjectStore } from '../../store/useProjectStore';
 import { useLabelStore } from '../../store/useLabelStore';
+import { useUIStore } from '../../store/useUIStore';
 import { cn } from '../../lib/utils';
 import type { Task, Priority } from '../../types';
+import type { RecurrencePattern } from '../../lib/recurrence';
 import { format } from 'date-fns';
 
 interface TaskEditModalProps {
     isOpen: boolean;
     onClose: () => void;
-    task: Task;
+    task?: Task | null;
+    mode?: 'add' | 'edit';
 }
 
-export const TaskEditModal = ({ isOpen, onClose, task }: TaskEditModalProps) => {
-    const { updateTask } = useTaskStore();
+export const TaskEditModal = ({ isOpen, onClose, task, mode = 'edit' }: TaskEditModalProps) => {
+    const { updateTask, addTask } = useTaskStore();
     const { projects } = useProjectStore();
     const { labels } = useLabelStore();
+    const { activeContext } = useUIStore();
 
-    const [content, setContent] = useState(task.content);
-    const [description, setDescription] = useState(task.description || '');
-    const [dueDate, setDueDate] = useState(task.dueDate || '');
-    const [priority, setPriority] = useState<Priority>(task.priority);
-    const [projectId, setProjectId] = useState(task.projectId);
-    const [selectedLabels, setSelectedLabels] = useState<string[]>(task.labels);
+    const [content, setContent] = useState('');
+    const [description, setDescription] = useState('');
+    const [dueDate, setDueDate] = useState('');
+    const [priority, setPriority] = useState<Priority>(4);
+    const [projectId, setProjectId] = useState('inbox');
+    const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
+    const [recurringPattern, setRecurringPattern] = useState<RecurrencePattern | null>(null);
+
+    // Click-based dropdowns
+    const [showLabelsDropdown, setShowLabelsDropdown] = useState(false);
+    const [showRecurrenceDropdown, setShowRecurrenceDropdown] = useState(false);
+    const labelsDropdownRef = useRef<HTMLDivElement>(null);
+    const recurrenceDropdownRef = useRef<HTMLDivElement>(null);
+
+    // Handle outside clicks for dropdowns
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (labelsDropdownRef.current && !labelsDropdownRef.current.contains(event.target as Node)) {
+                setShowLabelsDropdown(false);
+            }
+            if (recurrenceDropdownRef.current && !recurrenceDropdownRef.current.contains(event.target as Node)) {
+                setShowRecurrenceDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     useEffect(() => {
         if (isOpen) {
-            setContent(task.content);
-            setDescription(task.description || '');
-            setDueDate(task.dueDate || '');
-            setPriority(task.priority);
-            setProjectId(task.projectId);
-            setSelectedLabels(task.labels);
+            if (mode === 'edit' && task) {
+                setContent(task.content);
+                setDescription(task.description || '');
+                setDueDate(task.dueDate || '');
+                setPriority(task.priority);
+                setProjectId(task.projectId);
+                setSelectedLabels(task.labels);
+                setRecurringPattern(task.recurringPattern as RecurrencePattern || null);
+            } else {
+                // Add mode - reset to defaults
+                setContent('');
+                setDescription('');
+                setDueDate('');
+                setPriority(4);
+                // Set project based on active context
+                if (activeContext.type === 'project' && activeContext.id) {
+                    setProjectId(activeContext.id);
+                } else {
+                    setProjectId('inbox');
+                }
+                // Set default due date based on context
+                if (activeContext.type === 'today') {
+                    setDueDate(new Date().toISOString().split('T')[0]);
+                } else if (activeContext.type === 'upcoming') {
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    setDueDate(tomorrow.toISOString().split('T')[0]);
+                }
+                setSelectedLabels([]);
+                setRecurringPattern(null);
+            }
+            // Reset dropdowns
+            setShowLabelsDropdown(false);
+            setShowRecurrenceDropdown(false);
         }
-    }, [isOpen, task]);
+    }, [isOpen, task, mode, activeContext]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!content.trim()) return;
 
-        await updateTask(task.id, {
-            content,
-            description,
-            dueDate: dueDate || undefined,
-            priority,
-            projectId,
-            labels: selectedLabels,
-        });
+        if (mode === 'edit' && task) {
+            await updateTask(task.id, {
+                content,
+                description,
+                dueDate: dueDate || undefined,
+                priority,
+                projectId,
+                labels: selectedLabels,
+                isRecurring: !!recurringPattern,
+                recurringPattern: recurringPattern || undefined,
+            });
+        } else {
+            await addTask({
+                content,
+                description,
+                dueDate: dueDate || undefined,
+                priority,
+                projectId,
+                labels: selectedLabels,
+                isRecurring: !!recurringPattern,
+                recurringPattern: recurringPattern || undefined,
+            });
+        }
         onClose();
     };
+
+    const isEditMode = mode === 'edit';
+    const title = isEditMode ? 'Edit Task' : 'Add Task';
+    const submitText = isEditMode ? 'Save Changes' : 'Add task';
 
     return (
         <Transition show={isOpen} as={React.Fragment}>
@@ -81,7 +154,7 @@ export const TaskEditModal = ({ isOpen, onClose, task }: TaskEditModalProps) => 
                             <DialogPanel className="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-900 p-6 text-left align-middle shadow-xl transition-all">
                                 <div className="flex justify-between items-start mb-4">
                                     <DialogTitle as="h3" className="text-lg font-medium leading-6 text-gray-900 dark:text-white">
-                                        Edit Task
+                                        {title}
                                     </DialogTitle>
                                     <button
                                         onClick={onClose}
@@ -100,6 +173,7 @@ export const TaskEditModal = ({ isOpen, onClose, task }: TaskEditModalProps) => 
                                             onChange={(e) => setContent(e.target.value)}
                                             className="w-full text-lg font-medium border-none focus:ring-0 p-0 placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent text-gray-900 dark:text-white"
                                             placeholder="Task name"
+                                            autoFocus
                                         />
                                     </div>
 
@@ -115,13 +189,13 @@ export const TaskEditModal = ({ isOpen, onClose, task }: TaskEditModalProps) => 
                                     </div>
 
                                     <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100 dark:border-gray-800">
-                                        {/* Due Date */}
-                                        <div className="relative group">
+                                        {/* Due Date - Fixed with z-10 for proper click handling */}
+                                        <div className="relative">
                                             <input
                                                 type="date"
                                                 value={dueDate}
                                                 onChange={(e) => setDueDate(e.target.value)}
-                                                className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                                                className="absolute inset-0 opacity-0 cursor-pointer w-full z-10"
                                             />
                                             <button type="button" className={cn(
                                                 "flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded border transition-colors",
@@ -133,11 +207,11 @@ export const TaskEditModal = ({ isOpen, onClose, task }: TaskEditModalProps) => 
                                         </div>
 
                                         {/* Project */}
-                                        <div className="relative group">
+                                        <div className="relative">
                                             <select
                                                 value={projectId}
                                                 onChange={(e) => setProjectId(e.target.value)}
-                                                className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                                                className="absolute inset-0 opacity-0 cursor-pointer w-full z-10"
                                             >
                                                 <option value="inbox">Inbox</option>
                                                 {projects.map(p => (
@@ -151,11 +225,11 @@ export const TaskEditModal = ({ isOpen, onClose, task }: TaskEditModalProps) => 
                                         </div>
 
                                         {/* Priority */}
-                                        <div className="relative group">
+                                        <div className="relative">
                                             <select
                                                 value={priority}
                                                 onChange={(e) => setPriority(Number(e.target.value) as Priority)}
-                                                className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                                                className="absolute inset-0 opacity-0 cursor-pointer w-full z-10"
                                             >
                                                 <option value={1}>Priority 1</option>
                                                 <option value={2}>Priority 2</option>
@@ -174,40 +248,82 @@ export const TaskEditModal = ({ isOpen, onClose, task }: TaskEditModalProps) => 
                                             </button>
                                         </div>
 
-                                        {/* Labels */}
-                                        <div className="relative group">
-                                            <button type="button" className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                        {/* Labels - Click-based dropdown */}
+                                        <div className="relative" ref={labelsDropdownRef}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowLabelsDropdown(!showLabelsDropdown)}
+                                                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                            >
                                                 <Tag size={14} />
                                                 <span>Labels</span>
                                             </button>
 
-                                            <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 hidden group-hover:block z-10">
-                                                {labels.length === 0 ? (
-                                                    <div className="px-3 py-2 text-xs text-gray-400 dark:text-gray-500">No labels created</div>
-                                                ) : (
-                                                    labels.map(label => (
+                                            {showLabelsDropdown && (
+                                                <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-20">
+                                                    {labels.length === 0 ? (
+                                                        <div className="px-3 py-2 text-xs text-gray-400 dark:text-gray-500">No labels created</div>
+                                                    ) : (
+                                                        labels.map(label => (
+                                                            <button
+                                                                key={label.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setSelectedLabels(prev =>
+                                                                        prev.includes(label.id)
+                                                                            ? prev.filter(id => id !== label.id)
+                                                                            : [...prev, label.id]
+                                                                    );
+                                                                }}
+                                                                className={cn(
+                                                                    "w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2",
+                                                                    selectedLabels.includes(label.id) ? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30" : "text-gray-700 dark:text-gray-300"
+                                                                )}
+                                                            >
+                                                                <Tag size={12} color={label.color} className="fill-current opacity-50" />
+                                                                <span>{label.name}</span>
+                                                                {selectedLabels.includes(label.id) && <Check size={12} className="ml-auto" />}
+                                                            </button>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Recurrence - Click-based dropdown */}
+                                        <div className="relative" ref={recurrenceDropdownRef}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowRecurrenceDropdown(!showRecurrenceDropdown)}
+                                                className={cn(
+                                                    "px-2.5 py-1.5 text-xs font-medium border rounded hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-1.5",
+                                                    recurringPattern ? "text-primary-600 dark:text-primary-400 border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/30" : "text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700"
+                                                )}
+                                            >
+                                                <Repeat size={14} />
+                                                <span>{recurringPattern || 'Repeat'}</span>
+                                            </button>
+
+                                            {showRecurrenceDropdown && (
+                                                <div className="absolute top-full left-0 mt-1 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 z-20">
+                                                    {['daily', 'weekdays', 'weekly', 'monthly'].map((pattern) => (
                                                         <button
-                                                            key={label.id}
+                                                            key={pattern}
                                                             type="button"
                                                             onClick={() => {
-                                                                setSelectedLabels(prev =>
-                                                                    prev.includes(label.id)
-                                                                        ? prev.filter(id => id !== label.id)
-                                                                        : [...prev, label.id]
-                                                                );
+                                                                setRecurringPattern(recurringPattern === pattern ? null : pattern as RecurrencePattern);
+                                                                setShowRecurrenceDropdown(false);
                                                             }}
                                                             className={cn(
-                                                                "w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2",
-                                                                selectedLabels.includes(label.id) ? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30" : "text-gray-700 dark:text-gray-300"
+                                                                "w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800",
+                                                                recurringPattern === pattern ? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30" : "text-gray-700 dark:text-gray-300"
                                                             )}
                                                         >
-                                                            <Tag size={12} color={label.color} className="fill-current opacity-50" />
-                                                            <span>{label.name}</span>
-                                                            {selectedLabels.includes(label.id) && <Check size={12} className="ml-auto" />}
+                                                            {pattern.charAt(0).toUpperCase() + pattern.slice(1)}
                                                         </button>
-                                                    ))
-                                                )}
-                                            </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
@@ -247,7 +363,7 @@ export const TaskEditModal = ({ isOpen, onClose, task }: TaskEditModalProps) => 
                                             disabled={!content.trim()}
                                             className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            Save Changes
+                                            {submitText}
                                         </button>
                                     </div>
                                 </form>

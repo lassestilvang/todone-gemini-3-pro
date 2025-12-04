@@ -9,6 +9,7 @@ interface ProjectState {
     error: string | null;
     fetchProjects: () => Promise<void>;
     addProject: (project: Omit<Project, 'id' | 'order'>) => Promise<void>;
+    updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
 }
 
 export const useProjectStore = create<ProjectState>((set) => ({
@@ -38,6 +39,17 @@ export const useProjectStore = create<ProjectState>((set) => ({
             set((state) => ({ projects: [...state.projects, newProject] }));
         } catch {
             set({ error: 'Failed to add project' });
+        }
+    },
+
+    updateProject: async (id, updates) => {
+        try {
+            await db.projects.update(id, updates);
+            set((state) => ({
+                projects: state.projects.map((p) => (p.id === id ? { ...p, ...updates } : p)),
+            }));
+        } catch {
+            set({ error: 'Failed to update project' });
         }
     },
 }));

@@ -1,22 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { useFilterStore } from '../../store/useFilterStore';
 import { useUIStore } from '../../store/useUIStore';
 
-export const AddFilterModal = () => {
-    const { activeModal, closeModal } = useUIStore();
-    const { addFilter } = useFilterStore();
+export const FilterModal = () => {
+    const { activeModal, closeModal, editingItemId } = useUIStore();
+    const { addFilter, updateFilter, filters } = useFilterStore();
     const [name, setName] = useState('');
     const [query, setQuery] = useState('');
     const [color, setColor] = useState('#808080');
 
-    const isOpen = activeModal === 'filter';
+    const isOpen = activeModal === 'filter' || activeModal === 'edit-filter';
+    const isEditMode = activeModal === 'edit-filter';
+    const editingFilter = isEditMode ? filters.find(f => f.id === editingItemId) : null;
+
+    useEffect(() => {
+        if (isOpen && isEditMode && editingFilter) {
+            setName(editingFilter.name);
+            setQuery(editingFilter.query);
+            setColor(editingFilter.color);
+        } else if (isOpen && !isEditMode) {
+            setName('');
+            setQuery('');
+            setColor('#808080');
+        }
+    }, [isOpen, isEditMode, editingFilter]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim() || !query.trim()) return;
 
-        await addFilter(name, query, color);
+        if (isEditMode && editingItemId) {
+            await updateFilter(editingItemId, { name, query, color });
+        } else {
+            await addFilter(name, query, color);
+        }
 
         setName('');
         setQuery('');
@@ -24,8 +42,11 @@ export const AddFilterModal = () => {
         closeModal();
     };
 
+    const title = isEditMode ? 'Edit Filter' : 'Add Filter';
+    const submitText = isEditMode ? 'Save Changes' : 'Add Filter';
+
     return (
-        <Modal isOpen={isOpen} onClose={closeModal} title="Add Filter">
+        <Modal isOpen={isOpen} onClose={closeModal} title={title}>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label htmlFor="filter-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -88,10 +109,13 @@ export const AddFilterModal = () => {
                         disabled={!name.trim() || !query.trim()}
                         className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Add Filter
+                        {submitText}
                     </button>
                 </div>
             </form>
         </Modal>
     );
 };
+
+// Keep the old export for backwards compatibility
+export const AddFilterModal = FilterModal;

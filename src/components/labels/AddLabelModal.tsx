@@ -1,29 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { useLabelStore } from '../../store/useLabelStore';
 import { useUIStore } from '../../store/useUIStore';
 
-export const AddLabelModal = () => {
-    const { activeModal, closeModal } = useUIStore();
-    const { addLabel } = useLabelStore();
+export const LabelModal = () => {
+    const { activeModal, closeModal, editingItemId } = useUIStore();
+    const { addLabel, updateLabel, labels } = useLabelStore();
     const [name, setName] = useState('');
     const [color, setColor] = useState('#808080');
 
-    const isOpen = activeModal === 'label';
+    const isOpen = activeModal === 'label' || activeModal === 'edit-label';
+    const isEditMode = activeModal === 'edit-label';
+    const editingLabel = isEditMode ? labels.find(l => l.id === editingItemId) : null;
+
+    useEffect(() => {
+        if (isOpen && isEditMode && editingLabel) {
+            setName(editingLabel.name);
+            setColor(editingLabel.color);
+        } else if (isOpen && !isEditMode) {
+            setName('');
+            setColor('#808080');
+        }
+    }, [isOpen, isEditMode, editingLabel]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name.trim()) return;
 
-        await addLabel(name, color);
+        if (isEditMode && editingItemId) {
+            await updateLabel(editingItemId, { name, color });
+        } else {
+            await addLabel(name, color);
+        }
 
         setName('');
         setColor('#808080');
         closeModal();
     };
 
+    const title = isEditMode ? 'Edit Label' : 'Add Label';
+    const submitText = isEditMode ? 'Save Changes' : 'Add Label';
+
     return (
-        <Modal isOpen={isOpen} onClose={closeModal} title="Add Label">
+        <Modal isOpen={isOpen} onClose={closeModal} title={title}>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label htmlFor="label-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -69,10 +88,13 @@ export const AddLabelModal = () => {
                         disabled={!name.trim()}
                         className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Add Label
+                        {submitText}
                     </button>
                 </div>
             </form>
         </Modal>
     );
 };
+
+// Keep the old export for backwards compatibility
+export const AddLabelModal = LabelModal;

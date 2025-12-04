@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag, X } from 'lucide-react';
+import { Tag, X, Pencil } from 'lucide-react';
 import { useLabelStore } from '../../store/useLabelStore';
 import { useUIStore } from '../../store/useUIStore';
 import { cn } from '../../lib/utils';
@@ -7,7 +7,13 @@ import { cn } from '../../lib/utils';
 
 export const LabelList = () => {
     const { labels, deleteLabel } = useLabelStore();
-    const { activeContext, setActiveContext } = useUIStore();
+    const { activeContext, setActiveContext, openModal, setEditingItemId } = useUIStore();
+
+    const handleEdit = (e: React.MouseEvent, labelId: string) => {
+        e.stopPropagation();
+        setEditingItemId(labelId);
+        openModal('edit-label');
+    };
 
     return (
         <div className="space-y-1">
@@ -31,15 +37,23 @@ export const LabelList = () => {
                                 isActive ? "text-primary-600 dark:text-primary-400 font-medium" : "text-gray-700 dark:text-gray-300"
                             )}>{label.name}</span>
                         </div>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                deleteLabel(label.id);
-                            }}
-                            className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                            <X size={14} />
-                        </button>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                                onClick={(e) => handleEdit(e, label.id)}
+                                className="text-gray-400 hover:text-primary-500"
+                            >
+                                <Pencil size={14} />
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteLabel(label.id);
+                                }}
+                                className="text-gray-400 hover:text-red-500"
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
                     </div>
                 );
             })}
