@@ -7,7 +7,7 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
     return (
-        <div className="flex min-h-screen bg-white">
+        <div className="flex min-h-screen bg-white dark:bg-gray-950">
             <Sidebar />
             <main className="flex-1 min-w-0 overflow-auto">
                 <div className="max-w-4xl mx-auto px-8 py-12">

@@ -16,7 +16,7 @@ export const Sidebar = () => {
     const isOnline = useOnlineStatus();
 
     return (
-        <div className="w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 h-screen flex flex-col">
+        <div className="w-64 bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800 h-screen flex flex-col">
             <div className="p-4">
                 <div className="flex items-center gap-2 mb-6">
                     <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold">

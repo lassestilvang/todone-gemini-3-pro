@@ -26,28 +26,29 @@ function App() {
   const { viewType, setViewType, activeContext } = useUIStore();
 
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-
     const applyTheme = () => {
+      const root = window.document.documentElement;
+      root.classList.remove('light', 'dark');
+
       if (theme === 'system') {
         const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        root.classList.remove('light', 'dark'); // Ensure clean slate
         root.classList.add(systemTheme);
       } else {
-        root.classList.remove('light', 'dark'); // Ensure clean slate
         root.classList.add(theme);
       }
     };
 
     applyTheme();
 
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => applyTheme();
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      if (theme === 'system') {
+        applyTheme();
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
   useSeedData();
