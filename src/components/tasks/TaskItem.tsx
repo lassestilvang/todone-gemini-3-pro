@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Calendar, Tag, Plus, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
+import { Check, Calendar, Tag, Plus, ChevronDown, Sparkles, Loader2, Pencil } from 'lucide-react';
 import type { Task } from '../../types';
 import { useTaskStore } from '../../store/useTaskStore';
 import { useLabelStore } from '../../store/useLabelStore';
@@ -12,6 +12,7 @@ interface TaskItemProps {
 }
 
 import { useKarmaStore } from '../../store/useKarmaStore';
+import { TaskEditModal } from './TaskEditModal';
 
 export const TaskItem = ({ task }: TaskItemProps) => {
     const { toggleTask, tasks, addTask } = useTaskStore();
@@ -21,6 +22,7 @@ export const TaskItem = ({ task }: TaskItemProps) => {
     const [isAddingSubtask, setIsAddingSubtask] = useState(false);
     const [subtaskContent, setSubtaskContent] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
 
     const handleGenerateSubtasks = async () => {
@@ -98,7 +100,7 @@ export const TaskItem = ({ task }: TaskItemProps) => {
         <div className="group/item">
             <div
                 className="flex items-start gap-3 py-2 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-4 px-4 transition-colors cursor-pointer"
-                onClick={() => !isEditing && setIsEditing(true)}
+                onClick={() => setIsEditModalOpen(true)}
             >
                 <button
                     onClick={(e) => {
@@ -127,6 +129,7 @@ export const TaskItem = ({ task }: TaskItemProps) => {
                                 onKeyDown={handleKeyDown}
                                 onClick={(e) => e.stopPropagation()}
                                 className="w-full text-sm bg-transparent border-none focus:ring-0 p-0 text-gray-900 dark:text-white"
+                                onFocus={(e) => e.target.select()}
                             />
                         ) : (
                             <span className={cn(
@@ -167,6 +170,16 @@ export const TaskItem = ({ task }: TaskItemProps) => {
 
                 <div className="opacity-0 group-hover/item:opacity-100 flex items-center gap-2">
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsEditModalOpen(true);
+                            }}
+                            className="p-1 text-gray-400 hover:text-primary-600 hover:bg-gray-100 rounded transition-colors"
+                            title="Edit task"
+                        >
+                            <Pencil size={16} />
+                        </button>
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -226,6 +239,11 @@ export const TaskItem = ({ task }: TaskItemProps) => {
                     )}
                 </div>
             )}
+            <TaskEditModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                task={task}
+            />
         </div>
     );
 };

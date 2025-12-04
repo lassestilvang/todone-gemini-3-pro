@@ -30,6 +30,9 @@ export const filterTasks = (tasks: Task[], query: string, labels: Label[], proje
             // Projects (#project)
             if (term.startsWith('#')) {
                 const projectName = term.slice(1);
+                if (projectName === 'inbox') {
+                    return task.projectId === 'inbox';
+                }
                 const project = projects.find(p => p.name.toLowerCase() === projectName);
                 return project && task.projectId === project.id;
             }

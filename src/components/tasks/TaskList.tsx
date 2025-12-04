@@ -27,7 +27,11 @@ export const TaskList = ({ tasks: propTasks }: TaskListProps) => {
     const completedTasks = topLevelTasks.filter(t => t.isCompleted);
 
     const sensors = useSensors(
-        useSensor(PointerSensor),
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
         useSensor(KeyboardSensor, {
             coordinateGetter: sortableKeyboardCoordinates,
         })
