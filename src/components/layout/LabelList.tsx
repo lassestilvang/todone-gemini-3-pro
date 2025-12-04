@@ -1,12 +1,14 @@
 import React from 'react';
 import { Tag, X, Pencil } from 'lucide-react';
 import { useLabelStore } from '../../store/useLabelStore';
+import { useTaskStore } from '../../store/useTaskStore';
 import { useUIStore } from '../../store/useUIStore';
 import { cn } from '../../lib/utils';
 
 
 export const LabelList = () => {
     const { labels, deleteLabel } = useLabelStore();
+    const { tasks } = useTaskStore();
     const { activeContext, setActiveContext, openModal, setEditingItemId } = useUIStore();
 
     const handleEdit = (e: React.MouseEvent, labelId: string) => {
@@ -15,10 +17,16 @@ export const LabelList = () => {
         openModal('edit-label');
     };
 
+    // Count incomplete tasks for each label
+    const getTaskCount = (labelId: string) => {
+        return tasks.filter(t => !t.isCompleted && !t.parentId && t.labels.includes(labelId)).length;
+    };
+
     return (
         <div className="space-y-1">
             {labels.map((label) => {
                 const isActive = activeContext.type === 'label' && activeContext.id === label.id;
+                const taskCount = getTaskCount(label.id);
                 return (
                     <div
                         key={label.id}
@@ -37,22 +45,30 @@ export const LabelList = () => {
                                 isActive ? "text-primary-600 dark:text-primary-400 font-medium" : "text-gray-700 dark:text-gray-300"
                             )}>{label.name}</span>
                         </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                                onClick={(e) => handleEdit(e, label.id)}
-                                className="text-gray-400 hover:text-primary-500"
-                            >
-                                <Pencil size={14} />
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteLabel(label.id);
-                                }}
-                                className="text-gray-400 hover:text-red-500"
-                            >
-                                <X size={14} />
-                            </button>
+                        <div className="flex items-center gap-2">
+                            {taskCount > 0 && (
+                                <span className={cn(
+                                    "text-xs",
+                                    isActive ? "text-primary-500" : "text-gray-400"
+                                )}>{taskCount}</span>
+                            )}
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                    onClick={(e) => handleEdit(e, label.id)}
+                                    className="text-gray-400 hover:text-primary-500"
+                                >
+                                    <Pencil size={14} />
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteLabel(label.id);
+                                    }}
+                                    className="text-gray-400 hover:text-red-500"
+                                >
+                                    <X size={14} />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 );

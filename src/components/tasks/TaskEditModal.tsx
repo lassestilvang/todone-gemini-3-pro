@@ -36,6 +36,7 @@ export const TaskEditModal = ({ isOpen, onClose, task, mode = 'edit' }: TaskEdit
     const [showRecurrenceDropdown, setShowRecurrenceDropdown] = useState(false);
     const labelsDropdownRef = useRef<HTMLDivElement>(null);
     const recurrenceDropdownRef = useRef<HTMLDivElement>(null);
+    const dateInputRef = useRef<HTMLInputElement>(null);
 
     // Handle outside clicks for dropdowns
     useEffect(() => {
@@ -189,18 +190,24 @@ export const TaskEditModal = ({ isOpen, onClose, task, mode = 'edit' }: TaskEdit
                                     </div>
 
                                     <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-100 dark:border-gray-800">
-                                        {/* Due Date - Fixed with z-10 for proper click handling */}
+                                        {/* Due Date - Click to open date picker */}
                                         <div className="relative">
                                             <input
+                                                ref={dateInputRef}
                                                 type="date"
                                                 value={dueDate}
                                                 onChange={(e) => setDueDate(e.target.value)}
-                                                className="absolute inset-0 opacity-0 cursor-pointer w-full z-10"
+                                                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                                style={{ pointerEvents: 'none' }}
                                             />
-                                            <button type="button" className={cn(
-                                                "flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded border transition-colors",
-                                                dueDate ? "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800" : "text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-                                            )}>
+                                            <button
+                                                type="button"
+                                                onClick={() => dateInputRef.current?.showPicker()}
+                                                className={cn(
+                                                    "flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded border transition-colors",
+                                                    dueDate ? "text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-800" : "text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                                )}
+                                            >
                                                 <Calendar size={14} />
                                                 <span>{dueDate ? format(new Date(dueDate), 'MMM d') : 'Due date'}</span>
                                             </button>

@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CheckSquare, Calendar, CalendarDays, Inbox, Hash, Plus, WifiOff, Pencil } from 'lucide-react';
 import { useProjectStore } from '../../store/useProjectStore';
+import { useTaskStore } from '../../store/useTaskStore';
 import { useUIStore } from '../../store/useUIStore';
+import { isToday, parseISO, isFuture } from 'date-fns';
 
 import { cn } from '../../lib/utils';
 import { LabelList } from './LabelList';
@@ -11,9 +13,26 @@ import { KarmaStats } from '../gamification/KarmaStats';
 
 export const Sidebar = () => {
     const { projects } = useProjectStore();
+    const { tasks } = useTaskStore();
     const { openModal, activeContext, setActiveContext, setEditingItemId } = useUIStore();
 
     const isOnline = useOnlineStatus();
+
+    // Compute counts for incomplete tasks
+    const counts = useMemo(() => {
+        const incompleteTasks = tasks.filter(t => !t.isCompleted && !t.parentId);
+
+        const inboxCount = incompleteTasks.filter(t => t.projectId === 'inbox').length;
+        const todayCount = incompleteTasks.filter(t => t.dueDate && isToday(parseISO(t.dueDate))).length;
+        const upcomingCount = incompleteTasks.filter(t => t.dueDate && isFuture(parseISO(t.dueDate)) && !isToday(parseISO(t.dueDate))).length;
+
+        const projectCounts: Record<string, number> = {};
+        projects.forEach(p => {
+            projectCounts[p.id] = incompleteTasks.filter(t => t.projectId === p.id).length;
+        });
+
+        return { inboxCount, todayCount, upcomingCount, projectCounts };
+    }, [tasks, projects]);
 
     const handleEditProject = (e: React.MouseEvent, projectId: string) => {
         e.stopPropagation();
@@ -42,20 +61,21 @@ export const Sidebar = () => {
                     <SidebarItem
                         icon={<Inbox size={20} />}
                         label="Inbox"
-                        count={4}
+                        count={counts.inboxCount}
                         active={activeContext.type === 'inbox'}
                         onClick={() => setActiveContext({ type: 'inbox' })}
                     />
                     <SidebarItem
                         icon={<Calendar size={20} />}
                         label="Today"
-                        count={2}
+                        count={counts.todayCount}
                         active={activeContext.type === 'today'}
                         onClick={() => setActiveContext({ type: 'today' })}
                     />
                     <SidebarItem
                         icon={<CalendarDays size={20} />}
                         label="Upcoming"
+                        count={counts.upcomingCount}
                         active={activeContext.type === 'upcoming'}
                         onClick={() => setActiveContext({ type: 'upcoming' })}
                     />
@@ -74,34 +94,47 @@ export const Sidebar = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-1 px-2">
-                {projects.map((project) => (
-                    <div
-                        key={project.id}
-                        onClick={() => setActiveContext({ type: 'project', id: project.id })}
-                        className={cn(
-                            "flex items-center justify-between px-2 py-1.5 rounded-md group cursor-pointer transition-colors",
-                            activeContext.type === 'project' && activeContext.id === project.id
-                                ? "bg-white dark:bg-gray-800 shadow-sm"
-                                : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                        )}
-                    >
-                        <div className="flex items-center gap-3">
-                            <Hash size={18} style={{ color: project.color }} />
-                            <span className={cn(
-                                "text-sm",
+                {projects.map((project) => {
+                    const projectCount = counts.projectCounts[project.id] || 0;
+                    return (
+                        <div
+                            key={project.id}
+                            onClick={() => setActiveContext({ type: 'project', id: project.id })}
+                            className={cn(
+                                "flex items-center justify-between px-2 py-1.5 rounded-md group cursor-pointer transition-colors",
                                 activeContext.type === 'project' && activeContext.id === project.id
-                                    ? "text-primary-600 dark:text-primary-400 font-medium"
-                                    : "text-gray-700 dark:text-gray-300"
-                            )}>{project.name}</span>
-                        </div>
-                        <button
-                            onClick={(e) => handleEditProject(e, project.id)}
-                            className="text-gray-400 hover:text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    ? "bg-white dark:bg-gray-800 shadow-sm"
+                                    : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                            )}
                         >
-                            <Pencil size={14} />
-                        </button>
-                    </div>
-                ))}
+                            <div className="flex items-center gap-3">
+                                <Hash size={18} style={{ color: project.color }} />
+                                <span className={cn(
+                                    "text-sm",
+                                    activeContext.type === 'project' && activeContext.id === project.id
+                                        ? "text-primary-600 dark:text-primary-400 font-medium"
+                                        : "text-gray-700 dark:text-gray-300"
+                                )}>{project.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {projectCount > 0 && (
+                                    <span className={cn(
+                                        "text-xs",
+                                        activeContext.type === 'project' && activeContext.id === project.id
+                                            ? "text-primary-500"
+                                            : "text-gray-400"
+                                    )}>{projectCount}</span>
+                                )}
+                                <button
+                                    onClick={(e) => handleEditProject(e, project.id)}
+                                    className="text-gray-400 hover:text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <Pencil size={14} />
+                                </button>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
 
             <div className="flex items-center justify-between px-4 mb-2 mt-4">
@@ -165,7 +198,7 @@ const SidebarItem = ({ icon, label, count, active, color, onClick }: SidebarItem
                 </span>
                 <span>{label}</span>
             </div>
-            {count !== undefined && (
+            {count !== undefined && count > 0 && (
                 <span className={cn("text-xs", active ? "text-primary-500" : "text-gray-400")}>
                     {count}
                 </span>
@@ -173,4 +206,3 @@ const SidebarItem = ({ icon, label, count, active, color, onClick }: SidebarItem
         </button>
     );
 };
-
