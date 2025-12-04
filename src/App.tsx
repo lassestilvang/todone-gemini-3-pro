@@ -26,13 +26,14 @@ function App() {
   const { viewType, setViewType, activeContext } = useUIStore();
 
   useEffect(() => {
+    const root = window.document.documentElement;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
     const applyTheme = () => {
-      const root = window.document.documentElement;
       root.classList.remove('light', 'dark');
 
       if (theme === 'system') {
-        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        root.classList.add(systemTheme);
+        root.classList.add(mediaQuery.matches ? 'dark' : 'light');
       } else {
         root.classList.add(theme);
       }
@@ -40,15 +41,14 @@ function App() {
 
     applyTheme();
 
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => {
+    const handleSystemThemeChange = () => {
       if (theme === 'system') {
         applyTheme();
       }
     };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
   }, [theme]);
 
   useSeedData();
