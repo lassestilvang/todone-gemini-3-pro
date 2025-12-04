@@ -94,7 +94,7 @@ export const Sidebar = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-1 px-2">
-                {projects.map((project) => {
+                {projects.filter(p => p.id !== 'inbox').map((project) => {
                     const projectCount = counts.projectCounts[project.id] || 0;
                     return (
                         <div

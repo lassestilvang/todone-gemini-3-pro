@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
+import { ColorPicker } from '../ui/ColorPicker';
 import { useProjectStore } from '../../store/useProjectStore';
 import { useUIStore } from '../../store/useUIStore';
 
@@ -7,7 +8,7 @@ export const ProjectModal = () => {
     const { activeModal, closeModal, editingItemId } = useUIStore();
     const { addProject, updateProject, projects } = useProjectStore();
     const [name, setName] = useState('');
-    const [color, setColor] = useState('#808080');
+    const [color, setColor] = useState('#4073ff');
 
     const isOpen = activeModal === 'project' || activeModal === 'edit-project';
     const isEditMode = activeModal === 'edit-project';
@@ -19,7 +20,7 @@ export const ProjectModal = () => {
             setColor(editingProject.color);
         } else if (isOpen && !isEditMode) {
             setName('');
-            setColor('#808080');
+            setColor('#4073ff');
         }
     }, [isOpen, isEditMode, editingProject]);
 
@@ -40,7 +41,7 @@ export const ProjectModal = () => {
         }
 
         setName('');
-        setColor('#808080');
+        setColor('#4073ff');
         closeModal();
     };
 
@@ -65,21 +66,7 @@ export const ProjectModal = () => {
                     />
                 </div>
 
-                <div>
-                    <label htmlFor="project-color" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Color
-                    </label>
-                    <div className="mt-1 flex items-center gap-2">
-                        <input
-                            type="color"
-                            id="project-color"
-                            value={color}
-                            onChange={(e) => setColor(e.target.value)}
-                            className="h-8 w-8 rounded-md border border-gray-300 cursor-pointer p-0.5"
-                        />
-                        <span className="text-sm text-gray-500 dark:text-gray-400">{color}</span>
-                    </div>
-                </div>
+                <ColorPicker value={color} onChange={setColor} />
 
                 <div className="flex justify-end gap-3 mt-6">
                     <button

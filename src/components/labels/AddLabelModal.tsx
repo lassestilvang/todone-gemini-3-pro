@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
+import { ColorPicker } from '../ui/ColorPicker';
 import { useLabelStore } from '../../store/useLabelStore';
 import { useUIStore } from '../../store/useUIStore';
 
@@ -7,7 +8,7 @@ export const LabelModal = () => {
     const { activeModal, closeModal, editingItemId } = useUIStore();
     const { addLabel, updateLabel, labels } = useLabelStore();
     const [name, setName] = useState('');
-    const [color, setColor] = useState('#808080');
+    const [color, setColor] = useState('#db4035');
 
     const isOpen = activeModal === 'label' || activeModal === 'edit-label';
     const isEditMode = activeModal === 'edit-label';
@@ -19,7 +20,7 @@ export const LabelModal = () => {
             setColor(editingLabel.color);
         } else if (isOpen && !isEditMode) {
             setName('');
-            setColor('#808080');
+            setColor('#db4035');
         }
     }, [isOpen, isEditMode, editingLabel]);
 
@@ -34,7 +35,7 @@ export const LabelModal = () => {
         }
 
         setName('');
-        setColor('#808080');
+        setColor('#db4035');
         closeModal();
     };
 
@@ -59,21 +60,7 @@ export const LabelModal = () => {
                     />
                 </div>
 
-                <div>
-                    <label htmlFor="label-color" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Color
-                    </label>
-                    <div className="mt-1 flex items-center gap-2">
-                        <input
-                            type="color"
-                            id="label-color"
-                            value={color}
-                            onChange={(e) => setColor(e.target.value)}
-                            className="h-8 w-8 rounded-md border border-gray-300 cursor-pointer p-0.5"
-                        />
-                        <span className="text-sm text-gray-500 dark:text-gray-400">{color}</span>
-                    </div>
-                </div>
+                <ColorPicker value={color} onChange={setColor} />
 
                 <div className="flex justify-end gap-3 mt-6">
                     <button

@@ -221,7 +221,7 @@ export const TaskEditModal = ({ isOpen, onClose, task, mode = 'edit' }: TaskEdit
                                                 className="absolute inset-0 opacity-0 cursor-pointer w-full z-10"
                                             >
                                                 <option value="inbox">Inbox</option>
-                                                {projects.map(p => (
+                                                {projects.filter(p => p.id !== 'inbox').map(p => (
                                                     <option key={p.id} value={p.id}>{p.name}</option>
                                                 ))}
                                             </select>

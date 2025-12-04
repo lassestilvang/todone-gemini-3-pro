@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
+import { ColorPicker } from '../ui/ColorPicker';
 import { useFilterStore } from '../../store/useFilterStore';
 import { useUIStore } from '../../store/useUIStore';
 
@@ -8,7 +9,7 @@ export const FilterModal = () => {
     const { addFilter, updateFilter, filters } = useFilterStore();
     const [name, setName] = useState('');
     const [query, setQuery] = useState('');
-    const [color, setColor] = useState('#808080');
+    const [color, setColor] = useState('#158fad');
 
     const isOpen = activeModal === 'filter' || activeModal === 'edit-filter';
     const isEditMode = activeModal === 'edit-filter';
@@ -22,7 +23,7 @@ export const FilterModal = () => {
         } else if (isOpen && !isEditMode) {
             setName('');
             setQuery('');
-            setColor('#808080');
+            setColor('#158fad');
         }
     }, [isOpen, isEditMode, editingFilter]);
 
@@ -38,7 +39,7 @@ export const FilterModal = () => {
 
         setName('');
         setQuery('');
-        setColor('#808080');
+        setColor('#158fad');
         closeModal();
     };
 
@@ -76,25 +77,11 @@ export const FilterModal = () => {
                         placeholder="e.g., priority:1"
                     />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Supports simple queries like 'priority:1', 'label:work'.
+                        Examples: p1, today, @label, #project
                     </p>
                 </div>
 
-                <div>
-                    <label htmlFor="filter-color" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Color
-                    </label>
-                    <div className="mt-1 flex items-center gap-2">
-                        <input
-                            type="color"
-                            id="filter-color"
-                            value={color}
-                            onChange={(e) => setColor(e.target.value)}
-                            className="h-8 w-8 rounded-md border border-gray-300 cursor-pointer p-0.5"
-                        />
-                        <span className="text-sm text-gray-500 dark:text-gray-400">{color}</span>
-                    </div>
-                </div>
+                <ColorPicker value={color} onChange={setColor} />
 
                 <div className="flex justify-end gap-3 mt-6">
                     <button
