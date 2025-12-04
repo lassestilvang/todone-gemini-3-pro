@@ -175,7 +175,7 @@ export const TaskItem = ({ task }: TaskItemProps) => {
                                 e.stopPropagation();
                                 setIsEditModalOpen(true);
                             }}
-                            className="p-1 text-gray-400 hover:text-primary-600 hover:bg-gray-100 rounded transition-colors"
+                            className="p-1 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
                             title="Edit task"
                         >
                             <Pencil size={16} />
@@ -186,7 +186,7 @@ export const TaskItem = ({ task }: TaskItemProps) => {
                                 handleGenerateSubtasks();
                             }}
                             disabled={isGenerating}
-                            className="p-1 text-gray-400 hover:text-purple-500 hover:bg-purple-50 rounded transition-colors"
+                            className="p-1 text-gray-400 hover:text-purple-500 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/30 rounded transition-colors"
                             title="Auto-generate subtasks"
                         >
                             {isGenerating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
@@ -199,7 +199,7 @@ export const TaskItem = ({ task }: TaskItemProps) => {
                                 setIsExpanded(true);
                                 // TODO: Focus new subtask input
                             }}
-                            className="p-1 text-gray-400 hover:text-primary-600 hover:bg-gray-100 rounded transition-colors"
+                            className="p-1 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
                         >
                             <Plus size={16} />
                         </button>
@@ -208,7 +208,7 @@ export const TaskItem = ({ task }: TaskItemProps) => {
                         <button
                             onClick={() => setIsExpanded(!isExpanded)}
                             className={cn(
-                                "p-1 text-gray-400 hover:text-gray-600 transition-colors transform",
+                                "p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors transform",
                                 isExpanded && "rotate-180"
                             )}
                         >
@@ -232,7 +232,7 @@ export const TaskItem = ({ task }: TaskItemProps) => {
                                 value={subtaskContent}
                                 onChange={(e) => setSubtaskContent(e.target.value)}
                                 placeholder="Add sub-task..."
-                                className="flex-1 text-sm px-2 py-1 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                className="flex-1 text-sm px-2 py-1 border border-gray-200 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 bg-transparent text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500"
                                 onBlur={() => !subtaskContent && setIsAddingSubtask(false)}
                             />
                         </form>

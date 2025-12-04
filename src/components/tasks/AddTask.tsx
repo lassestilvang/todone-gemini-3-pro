@@ -75,7 +75,7 @@ export const AddTask = () => {
         return (
             <button
                 onClick={() => setIsExpanded(true)}
-                className="flex items-center gap-2 text-gray-500 hover:text-primary-600 transition-colors py-2 px-2 -ml-2 rounded-md hover:bg-gray-100 w-full text-left"
+                className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors py-2 px-2 -ml-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 w-full text-left"
             >
                 <div className="w-5 h-5 rounded-full flex items-center justify-center text-primary-500">
                     <Plus size={18} />
@@ -86,7 +86,7 @@ export const AddTask = () => {
     }
 
     return (
-        <form onSubmit={handleSubmit} className="border border-gray-200 rounded-lg p-3 shadow-sm bg-white">
+        <form onSubmit={handleSubmit} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm bg-white dark:bg-gray-900">
             <div className="relative">
                 <input
                     autoFocus
@@ -94,34 +94,34 @@ export const AddTask = () => {
                     value={content}
                     onChange={handleContentChange}
                     placeholder="Task name (e.g., 'Buy milk tomorrow')"
-                    className="w-full text-sm font-medium placeholder:text-gray-400 outline-none mb-2 pr-20"
+                    className="w-full text-sm font-medium placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none mb-2 pr-20 bg-transparent text-gray-900 dark:text-white"
                 />
                 {parsedDate && (
-                    <div className="absolute right-0 top-0 text-xs text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded border border-primary-100 flex items-center gap-1">
+                    <div className="absolute right-0 top-0 text-xs text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 px-1.5 py-0.5 rounded border border-primary-100 dark:border-primary-800 flex items-center gap-1">
                         <Calendar size={10} />
                         {format(parsedDate.date, 'MMM d')}
                     </div>
                 )}
             </div>
-            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
                 <div className="flex gap-2">
                     {/* Quick actions (Date, Priority, etc.) */}
-                    <button type="button" className="px-2 py-1 text-xs font-medium text-gray-500 border border-gray-200 rounded hover:bg-gray-50">
+                    <button type="button" className="px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800">
                         Today
                     </button>
-                    <button type="button" className="px-2 py-1 text-xs font-medium text-gray-500 border border-gray-200 rounded hover:bg-gray-50">
+                    <button type="button" className="px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800">
                         Inbox
                     </button>
 
                     <div className="relative group">
-                        <button type="button" className="px-2 py-1 text-xs font-medium text-gray-500 border border-gray-200 rounded hover:bg-gray-50 flex items-center gap-1">
+                        <button type="button" className="px-2 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-1">
                             <Tag size={12} />
                             <span>Labels</span>
                         </button>
 
-                        <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg py-1 hidden group-hover:block z-10">
+                        <div className="absolute top-full left-0 mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 hidden group-hover:block z-10">
                             {labels.length === 0 ? (
-                                <div className="px-3 py-2 text-xs text-gray-400">No labels created</div>
+                                <div className="px-3 py-2 text-xs text-gray-400 dark:text-gray-500">No labels created</div>
                             ) : (
                                 labels.map(label => (
                                     <button
@@ -135,8 +135,8 @@ export const AddTask = () => {
                                             );
                                         }}
                                         className={cn(
-                                            "w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 flex items-center gap-2",
-                                            selectedLabels.includes(label.id) ? "text-primary-600 bg-primary-50" : "text-gray-700"
+                                            "w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2",
+                                            selectedLabels.includes(label.id) ? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30" : "text-gray-700 dark:text-gray-300"
                                         )}
                                     >
                                         <Tag size={12} color={label.color} className="fill-current opacity-50" />
@@ -149,22 +149,22 @@ export const AddTask = () => {
 
                     <div className="relative group">
                         <button type="button" className={cn(
-                            "px-2 py-1 text-xs font-medium border rounded hover:bg-gray-50 flex items-center gap-1",
-                            recurringPattern ? "text-primary-600 border-primary-200 bg-primary-50" : "text-gray-500 border-gray-200"
+                            "px-2 py-1 text-xs font-medium border rounded hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-1",
+                            recurringPattern ? "text-primary-600 dark:text-primary-400 border-primary-200 dark:border-primary-800 bg-primary-50 dark:bg-primary-900/30" : "text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700"
                         )}>
                             <Repeat size={12} />
                             <span>{recurringPattern || 'Repeat'}</span>
                         </button>
 
-                        <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg py-1 hidden group-hover:block z-10">
+                        <div className="absolute top-full left-0 mt-1 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1 hidden group-hover:block z-10">
                             {['daily', 'weekdays', 'weekly', 'monthly'].map((pattern) => (
                                 <button
                                     key={pattern}
                                     type="button"
                                     onClick={() => setRecurringPattern(recurringPattern === pattern ? null : pattern as RecurrencePattern)}
                                     className={cn(
-                                        "w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50",
-                                        recurringPattern === pattern ? "text-primary-600 bg-primary-50" : "text-gray-700"
+                                        "w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800",
+                                        recurringPattern === pattern ? "text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30" : "text-gray-700 dark:text-gray-300"
                                     )}
                                 >
                                     {pattern.charAt(0).toUpperCase() + pattern.slice(1)}
@@ -180,7 +180,7 @@ export const AddTask = () => {
                             const label = labels.find(l => l.id === id);
                             if (!label) return null;
                             return (
-                                <span key={id} className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 border border-gray-200">
+                                <span key={id} className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
                                     {label.name}
                                 </span>
                             );
@@ -192,7 +192,7 @@ export const AddTask = () => {
                 <button
                     type="button"
                     onClick={() => setIsExpanded(false)}
-                    className="px-3 py-1.5 text-xs font-semibold text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+                    className="px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
                     Cancel
                 </button>
